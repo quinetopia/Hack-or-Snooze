@@ -60,9 +60,12 @@ $(async function() {
 
   /* Event handler for Favorites*/
 
-  $navFavorite.on("click", function() {
-    console.log("You've clicked favorites");
+  $navFavorite.on("click", async function() {
     $allStoriesList.hide();
+    $favoriteArticles.empty();
+    
+    currentUser.favorites = await User.getFavorites(currentUser.loginToken, currentUser.username);
+
     for (let story of currentUser.favorites) {
       const result = generateStoryHTML(story);
       $favoriteArticles.append(result);
@@ -74,14 +77,19 @@ $(async function() {
   });
 
   // Handles clicks on the favorite bookmarks
-  $articlesParent.on("click", ".bookmark", function() {
-    console.log("Clicked on a bookmark");
-    $(event.target).removeClass("far").addClass("fas")
-    console.log(event.target.dataset.storyId);
-    User.createFavourite(currentUser.loginToken, currentUser.username, event.target.dataset.storyId);
-    console.log(currentUser.favorites);
-    // NEED TO ADD FAVORITE REMOVAL
-
+  $articlesParent.on("click", ".bookmark", async function() {
+    if (!currentUser) return undefined;
+    
+    const storyId = event.target.dataset.storyId
+    
+    if (isInFavorites(storyId)) {
+      $(event.target).removeClass("fas").addClass("far");
+      User.deleteFavorite(currentUser.loginToken, currentUser.username, storyId);
+    } else {
+      $(event.target).removeClass("far").addClass("fas");
+      User.createFavorite(currentUser.loginToken, currentUser.username, storyId);   
+    }
+    currentUser.favorites = await User.getFavorites(currentUser.loginToken, currentUser.username);
   });
 
   /**
@@ -129,7 +137,6 @@ $(async function() {
     /* Event handler for clicking submit */
 
   $navSubmit.on("click", function() {
-    console.log("Ya clicked the submit button!");
      $submitForm.slideToggle();
 
   });
@@ -206,17 +213,31 @@ $(async function() {
     }
   }
 
+function isInFavorites(id) {
+  if (currentUser) {
+    for (let comparison of currentUser.favorites) {
+      if (id === comparison.storyId) return true;
+    }
+  }
+  return false;
+}
+
+
+
   /**
    * A function to render HTML for an individual Story instance
    */
 
   function generateStoryHTML(story) {
     let hostName = getHostName(story.url);
+    let bookmarkClass = "far";
+
+    if (isInFavorites(story.storyId)) bookmarkClass = "fas";
 
     // render story markup
     const storyMarkup = $(`
       <li id="${story.storyId}">
-        <i class="far fa-bookmark bookmark" data-story-id = "${story.storyId}"></i>
+        <i class="${bookmarkClass} fa-bookmark bookmark" data-story-id = "${story.storyId}"></i>
         <a class="article-link" href="${story.url}" target="a_blank">
           <strong>${story.title}</strong>
         </a>

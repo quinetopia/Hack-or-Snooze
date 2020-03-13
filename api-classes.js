@@ -158,10 +158,26 @@ class User {
     return existingUser;
   }
 
-  static async createFavourite(token, username, storyId){
-const newFavourite = await axios.post(`${BASE_URL}/users/${username}/favorites/${storyId}`, { "token" : token});
-console.log(newFavourite);
+  static async getFavorites(token, username){
+    const response = await axios.get(`${BASE_URL}/users/${username}`, {
+      params: {
+        token
+      }
+    });
+    return response.data.user.favorites.map(s => new Story(s));
   }
+
+  static async createFavorite(token, username, storyId){
+    await axios.post(`${BASE_URL}/users/${username}/favorites/${storyId}`, { "token" : token}); 
+  }
+
+  static async deleteFavorite(token, username, storyId) {
+    console.log("Your token: " + token);
+    await axios.delete(`${BASE_URL}/users/${username}/favorites/${storyId}`, {data: { "token" : token}});
+    const deletedFavorite = await axios.get(`${BASE_URL}/stories/${storyId}`);
+  }
+
+
 }
 
 /**
@@ -184,4 +200,11 @@ class Story {
     this.createdAt = storyObj.createdAt;
     this.updatedAt = storyObj.updatedAt;
   }
+
+  static async getStory(storyId) {
+    let storyResponse = await axios.get(`${BASE_URL}/stories/${storyId}`); 
+    return storyResponse.data.story;
+  }
+
+
 }
