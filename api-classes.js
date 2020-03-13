@@ -169,15 +169,31 @@ class User {
   }
 
   static async createFavorite(user, storyId){
-    user.favorites.push(await Story.getStory(storyId));
-    await axios.post(`${BASE_URL}/users/${user.username}/favorites/${storyId}`, { "token" : user.loginToken}); 
+    await axios.post(`${BASE_URL}/users/${username}/favorites/${storyId}`, { "token": token});
+    //Wierd code from VSCode live share glitch - I think.
+    //user.favorites.push(await Story.getStory(storyId));  
   }
 
-  static async deleteFavorite(user, storyId) {
+  async deleteFavorite(storyId) {
+    // deleting from server
     await axios.delete(`${BASE_URL}/users/${user.username}/favorites/${storyId}`, {data: { "token" : user.loginToken}});
-    const deletedFavorite = await axios.get(`${BASE_URL}/stories/${storyId}`);
+    // const deletedFavorite = await axios.get(`${BASE_URL}/stories/${storyId}`);
+    console.log("Before", this.favorites);
+    // deleteing story from local user favourites
+    for (let i = 0; i < this.favorites.length; i++) {
+      if (this.favorites.storyId === storyId) {
+        this.favorites.splice(i, 1);
+      };
+    }
+      console.log("After", this.favorites);    
   }
 
+    
+    /*sketched out Thursday night  
+      r`emove story from local favorites - loop over currentUser.Favourites, 
+      */
+  //removeFavoriteLocal(currentUser, storyId){
+    
 
 }
 
@@ -228,7 +244,6 @@ class Story {
     }
     return false;
   }
-
 
 
 }

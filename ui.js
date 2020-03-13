@@ -84,8 +84,11 @@ $(async function() {
     let $bookmark = $(event.target);
 
     if (await Story.isInFavorites(currentUser, storyId)) {
+      console.log("Wants to delete");
       User.deleteFavorite(currentUser, storyId);
-      $boomark.removeClass("fas").addClass("far");
+      console.log("Does delete");
+      $bookmark.removeClass("fas").addClass("far");
+      console.log("Changes class");
     } else {
       User.createFavorite(currentUser, storyId); 
       $bookmark.removeClass("far").addClass("fas");  
