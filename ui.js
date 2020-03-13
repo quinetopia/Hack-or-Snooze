@@ -78,18 +78,19 @@ $(async function() {
 
   // Handles clicks on the favorite bookmarks
   $articlesParent.on("click", ".bookmark", async function() {
-    if (!currentUser) return undefined;
+    if (!currentUser) return;
     
-    const storyId = event.target.dataset.storyId
-    
-    if (isInFavorites(storyId)) {
-      $(event.target).removeClass("fas").addClass("far");
-      User.deleteFavorite(currentUser.loginToken, currentUser.username, storyId);
+    const storyId = event.target.dataset.storyId;
+    let $bookmark = $(event.target);
+
+    if (await Story.isInFavorites(currentUser, storyId)) {
+      User.deleteFavorite(currentUser, storyId);
+      $boomark.removeClass("fas").addClass("far");
     } else {
-      $(event.target).removeClass("far").addClass("fas");
-      User.createFavorite(currentUser.loginToken, currentUser.username, storyId);   
+      User.createFavorite(currentUser, storyId); 
+      $bookmark.removeClass("far").addClass("fas");  
     }
-    currentUser.favorites = await User.getFavorites(currentUser.loginToken, currentUser.username);
+    
   });
 
   /**
@@ -213,16 +214,9 @@ $(async function() {
     }
   }
 
-function isInFavorites(id) {
-  if (currentUser) {
-    for (let comparison of currentUser.favorites) {
-      if (id === comparison.storyId) return true;
-    }
-  }
-  return false;
-}
 
 
+  
 
   /**
    * A function to render HTML for an individual Story instance
@@ -232,8 +226,9 @@ function isInFavorites(id) {
     let hostName = getHostName(story.url);
     let bookmarkClass = "far";
 
-    if (isInFavorites(story.storyId)) bookmarkClass = "fas";
-
+    if (currentUser) {
+      if (Story.isInLocalFavorites(currentUser, story.storyId)) bookmarkClass = "fas";
+    }
     // render story markup
     const storyMarkup = $(`
       <li id="${story.storyId}">

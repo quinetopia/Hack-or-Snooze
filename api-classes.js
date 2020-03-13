@@ -164,16 +164,17 @@ class User {
         token
       }
     });
-    return response.data.user.favorites.map(s => new Story(s));
+    return response.data.user.favorites
+    //.map(s => new Story(s));
   }
 
-  static async createFavorite(token, username, storyId){
-    await axios.post(`${BASE_URL}/users/${username}/favorites/${storyId}`, { "token" : token}); 
+  static async createFavorite(user, storyId){
+    user.favorites.push(await Story.getStory(storyId));
+    await axios.post(`${BASE_URL}/users/${user.username}/favorites/${storyId}`, { "token" : user.loginToken}); 
   }
 
-  static async deleteFavorite(token, username, storyId) {
-    console.log("Your token: " + token);
-    await axios.delete(`${BASE_URL}/users/${username}/favorites/${storyId}`, {data: { "token" : token}});
+  static async deleteFavorite(user, storyId) {
+    await axios.delete(`${BASE_URL}/users/${user.username}/favorites/${storyId}`, {data: { "token" : user.loginToken}});
     const deletedFavorite = await axios.get(`${BASE_URL}/stories/${storyId}`);
   }
 
@@ -205,6 +206,29 @@ class Story {
     let storyResponse = await axios.get(`${BASE_URL}/stories/${storyId}`); 
     return storyResponse.data.story;
   }
+  
+  // Checks to see if the story is marked as a favorite on the server
+  static async isInFavorites(user, storyId) {
+    const favorites = await User.getFavorites(user.loginToken, user.username);
+    console.log("Here are the latest favorites: " + favorites);
+    for (let story of favorites) {
+      console.log("storyId: " + storyId + " story.storyId: " + story.storyId);
+      if (storyId === story.storyId) {
+        console.log("This story is already a favorite!")
+        return true;
+      }
+    }
+    console.log("This story is NOT in favorites!");
+    return false;
+  }
+
+  static isInLocalFavorites(user, storyId) {
+    for (let story of user.favorites) {
+      if (storyId === story.storyId) return true;
+    }
+    return false;
+  }
+
 
 
 }
